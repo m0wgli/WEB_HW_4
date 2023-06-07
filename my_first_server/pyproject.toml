@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "my-first-server"
+version = "0.1.0"
+description = ""
+authors = ["m0wgli <rodiontiutiunyk@gmail.com>"]
+readme = "README.md"
+packages = [{include = "my_first_server"}]
+
+[tool.poetry.dependencies]
+python = "3.11.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
