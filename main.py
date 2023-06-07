@@ -82,6 +82,12 @@ def run(server_class=HTTPServer, handler_class=HttpHandler):
 
 
 def run_server(host, port):
+    data_file = 'storage/data.json'
+    if not os.path.exists(data_file) or os.stat(data_file).st_size == 0:
+        # Створити новий порожній файл data.json
+        with open(data_file, 'w') as fd:
+            json.dump({}, fd)
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((host, port))
         s.listen(1)
@@ -90,25 +96,37 @@ def run_server(host, port):
         while True:
             conn, addr = s.accept()
             print(f'Connection established from {addr}')
-            data = conn.recv(1024).decode()
-            print(f'Received data: {data}')
-            with open ('storage/data.json', 'a') as fd:
-                fd.write(data)
+            data_dict = conn.recv(4096).decode()
+            print(f'Received data: {data_dict}')
+
+            try:
+                with open(data_file) as fd:
+                    data = json.load(fd)
+            except json.JSONDecodeError:
+                # Обробка недійсного формату JSON
+                response_data = "Invalid data format"
+                response = json.dumps(response_data)
+                conn.sendall(response.encode())
+                conn.close()
+                continue
 
             try:
                 # Обробка отриманих даних
-                data_dict = json.loads(data)
+                data.update(json.loads(data_dict))
+                with open(data_file, 'w') as fd:
+                    json.dump(data, fd)
                 # Виконати потрібні дії з отриманими даними
                 response_data = "Data processed successfully"
                 response = json.dumps(response_data)
-
             except json.JSONDecodeError:
+                # Обробка недійсного формату JSON
                 response_data = "Invalid data format"
                 response = json.dumps(response_data)
 
             # Відправка відповіді клієнту
             conn.sendall(response.encode())
             conn.close()
+
 
 
 if __name__ == '__main__':
